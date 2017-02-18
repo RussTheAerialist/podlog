@@ -1,4 +1,6 @@
 pub mod operation {
+    use std::str::FromStr;
+
     #[derive(Debug)]
     enum OperationSource {
         UNKNOWN(String),
@@ -61,8 +63,10 @@ pub mod operation {
         resource_type: OperationResourceType
     }
 
-    impl Operation {
-        pub fn from_str(data: &str) -> Result<Operation, &str> {
+    impl FromStr for Operation {
+        type Err = &'static str;
+
+        fn from_str(data: &str) -> Result<Operation, &'static str> {
             let mut parts = data.split(".");
             let source_option = parts.next();
             let method_option = parts.next();
