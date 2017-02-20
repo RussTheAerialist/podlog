@@ -11,25 +11,25 @@ pub mod log_entry {
 
     #[derive(Debug)]
     pub struct LogEntry {
-        owner_id: Option<String>,
-        bucket: Option<String>,
-        timestamp: DateTime<UTC>,
-        ip_address: Ipv4Addr,
-        request_id: Option<String>,
-        requestor_id: Option<String>,
-        operation: Operation,
-        path: Option<String>,
-        request_uri: Option<String>,
-        http_status: u16,
-        error_message: Option<String>,
+        pub owner_id: Option<String>,
+        pub bucket: Option<String>,
+        pub timestamp: DateTime<UTC>,
+        pub ip_address: Ipv4Addr,
+        pub request_id: Option<String>,
+        pub requestor_id: Option<String>,
+        pub operation: Operation,
+        pub path: Option<String>,
+        pub request_uri: Option<String>,
+        pub http_status: u16,
+        pub error_message: Option<String>,
         // TODO: Replace with a list of error codes
-        bytes_sent: u64,
-        object_size: u64,
-        total_time: Duration,
-        processing_time: Duration,
-        referrer: Option<String>,
-        user_agent: Option<String>,
-        version_id: Option<String>
+        pub bytes_sent: u64,
+        pub object_size: u64,
+        pub total_time: Duration,
+        pub processing_time: Duration,
+        pub referrer: Option<String>,
+        pub user_agent: Option<String>,
+        pub version_id: Option<String>
     }
 
     impl Default for LogEntry {
