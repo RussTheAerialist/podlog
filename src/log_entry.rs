@@ -7,10 +7,11 @@ pub mod log_entry {
     use tokenize::tokenize::Tokenizer;
 
     static SEPARATORS: &'static [char] = &[' ', ' ', '[', ']', ' ', ' ', ' ', ' ', ' ', ' ',
-        '"', '"', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '"', '"', ' ', '"', '"'];
+        '"', '"', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '"', '"', ' ', '"', '"', ' '];
 
     #[derive(Debug)]
     pub struct LogEntry {
+        pub path: Option<String>,
         pub owner_id: Option<String>,
         pub bucket: Option<String>,
         pub timestamp: DateTime<UTC>,
@@ -18,7 +19,6 @@ pub mod log_entry {
         pub request_id: Option<String>,
         pub requestor_id: Option<String>,
         pub operation: Operation,
-        pub path: Option<String>,
         pub request_uri: Option<String>,
         pub http_status: u16,
         pub error_message: Option<String>,
@@ -35,16 +35,15 @@ pub mod log_entry {
     impl Default for LogEntry {
         fn default() -> LogEntry {
             LogEntry {
+                path: None,
                 owner_id: None,
                 bucket: None,
-                timestamp: Local::now().with_timezone(&UTC),
-                ip_address: "127.0.0.1".parse().unwrap(),
-                requestor_id: None,
+                timestamp: UTC::now(),
+                ip_address: Ipv4Addr::new(127, 0, 0, 1),
                 request_id: None,
-                operation: "UNKNOWN.UNKNOWN.UNKNOWN".parse().unwrap(),
-                path: None,
+                requestor_id: None,
                 request_uri: None,
-                http_status: 0,
+                http_status: 404,
                 error_message: None,
                 bytes_sent: 0,
                 object_size: 0,
@@ -52,7 +51,8 @@ pub mod log_entry {
                 processing_time: Duration::new(0, 0),
                 referrer: None,
                 user_agent: None,
-                version_id: None
+                version_id: None,
+                operation: Operation::default()
             }
         }
     }
@@ -75,6 +75,13 @@ pub mod log_entry {
     impl LogEntry {
         pub fn was_complete_download(&self) -> bool {
             self.bytes_sent == self.object_size
+        }
+
+        pub fn is_audio_file(&self) -> bool {
+            match self.path {
+                Some(ref x) => x.ends_with(".mp3"),
+                None => false
+            }
         }
 
         pub fn from_str<'a>(line: &'a str) -> LogEntry {
@@ -105,6 +112,7 @@ pub mod log_entry {
             tokenizer.next(); // Skip ending space
             tokenizer.next(); // Skip open '"'
             new_entry.user_agent = get_next_token!(tokenizer);
+            tokenizer.next(); // Skip ending space
             new_entry.version_id = get_next_token!(tokenizer);
 
             new_entry
