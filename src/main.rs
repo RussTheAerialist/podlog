@@ -43,20 +43,29 @@ impl OutputEntry {
 fn main() {
     let matches = App::new("Podlog")
         .version("0.1")
-        .arg(Arg::with_name("FILENAME")
+        .arg(Arg::with_name("DIRECTORY")
             .required(true)
             .index(1))
         .get_matches();
 
-    let filename = matches.value_of("FILENAME").unwrap();
+    let directory = Path::new(matches.value_of("DIRECTORY").unwrap());
+    if !directory.is_dir() {
+        panic!("{} isn't a directory", directory.to_str().unwrap());
+    }
+
     let mut results : HashMap<String, Vec<OutputEntry> > = HashMap::new();
-    foo(filename, &mut results);
+
+    let directory_entries = directory.read_dir().ok().unwrap();
+    for file in directory_entries {
+        let entry = file.ok().unwrap();
+        process_log_file(&entry.path(), &mut results);
+    }
+
     let storage = serde_json::to_string_pretty(&results).unwrap();
     println!("{}", storage);
 }
 
-fn foo(filename : &str, results : &mut HashMap<String, Vec<OutputEntry> >) -> () {
-    let path = Path::new(filename);
+fn process_log_file(path : &Path, results : &mut HashMap<String, Vec<OutputEntry> >) -> () {
     let file = BufReader::new(File::open(&path).unwrap());
     let lines = file.lines().filter_map(|result| result.ok()); // Filter out bad rows
     let entries = lines.map(|x| LogEntry::from_str(&x))
