@@ -51,6 +51,8 @@ fn main() {
     let filename = matches.value_of("FILENAME").unwrap();
     let mut results : HashMap<String, Vec<OutputEntry> > = HashMap::new();
     foo(filename, &mut results);
+    let storage = serde_json::to_string_pretty(&results).unwrap();
+    println!("{}", storage);
 }
 
 fn foo(filename : &str, results : &mut HashMap<String, Vec<OutputEntry> >) -> () {
@@ -73,8 +75,6 @@ fn foo(filename : &str, results : &mut HashMap<String, Vec<OutputEntry> >) -> ()
             }
         }
     }
-    let storage = serde_json::to_string_pretty(&results).unwrap();
-    println!("{}", storage);
 }
 
 // Output Format:
