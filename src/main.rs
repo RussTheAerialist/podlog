@@ -3,15 +3,27 @@ mod tokenize;
 mod log_entry;
 
 extern crate chrono;
+extern crate clap;
 
 use log_entry::log_entry::LogEntry;
+use clap::{Arg, App};
+use std::io::prelude::*;
+use std::path::Path;
+use std::fs::File;
+use std::io::BufReader;
 
 fn main() {
-    let test_line = "8263874e0c9548cbd23b87b8618c316a2ffb6d29e72aaef03a8b275cd11cb23a episodes.batmanslittlebird.com [20/Oct/2016:20:35:11 +0000] 69.25.143.32 - F5C37873583CA70C WEBSITE.GET.OBJECT index.html \"GET / HTTP/1.1\" 403 AccessDenied 303 - 297 - \"-\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:49.0) Gecko/20100101 Firefox/49.0\"";
-    let log = LogEntry::from_str(test_line);
-    println!("{:?}", log);
-    match log.was_complete_download() {
-        true => println!("Complete Download"),
-        false => println!("Incomplete Download")
-    }
+    let matches = App::new("Podlog")
+        .version("0.1")
+        .arg(Arg::with_name("FILENAME")
+                .required(true)
+                .index(1))
+    .get_matches();
+
+    let path = Path::new(matches.value_of("FILENAME").unwrap());
+    let file = BufReader::new(File::open(&path).unwrap());
+    let lines = file.lines().filter_map(|result| result.ok()); // Filter out bad rows
+    let entries = lines.map(|x| LogEntry::from_str(&x)); // Turn them into log entries
+
+    // Create a hashmap based on path name
 }
