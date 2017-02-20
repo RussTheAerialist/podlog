@@ -49,11 +49,11 @@ fn main() {
         .get_matches();
 
     let filename = matches.value_of("FILENAME").unwrap();
-    foo(filename);
+    let mut results : HashMap<String, Vec<OutputEntry> > = HashMap::new();
+    foo(filename, &mut results);
 }
 
-fn foo(filename : &str) -> () {
-
+fn foo(filename : &str, results : &mut HashMap<String, Vec<OutputEntry> >) -> () {
     let path = Path::new(filename);
     let file = BufReader::new(File::open(&path).unwrap());
     let lines = file.lines().filter_map(|result| result.ok()); // Filter out bad rows
@@ -61,7 +61,7 @@ fn foo(filename : &str) -> () {
                        .filter(|x| x.operation.source == OperationSource::WEBSITE)
                        .filter(|ref x| x.is_audio_file());
 
-    let mut results : HashMap<String, Vec<OutputEntry> > = HashMap::new();
+
     for entry in entries {
         let path = entry.path.clone().unwrap();
         if !results.contains_key(&path) {
