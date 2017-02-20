@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Russell Hay <me@russellhay.com>"]
 
 [dependencies]
-clap = "2.20.4"
+clap = "2.20"
+serde = "0.9"
+serde_derive = "0.9"
+serde_json = "0.9"
 chrono = { version = "0.3", features = ["serde" ] }
 
