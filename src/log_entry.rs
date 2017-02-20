@@ -10,49 +10,49 @@ pub mod log_entry {
         '"', '"', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '"', '"', ' ', '"', '"'];
 
     #[derive(Debug)]
-    pub struct LogEntry<'a> {
-        owner_id: &'a str,
-        bucket: &'a str,
+    pub struct LogEntry {
+        owner_id: Option<String>,
+        bucket: Option<String>,
         timestamp: DateTime<UTC>,
         ip_address: Ipv4Addr,
-        request_id: &'a str,
-        requestor_id: &'a str,
+        request_id: Option<String>,
+        requestor_id: Option<String>,
         operation: Operation,
-        path: &'a str,
-        request_uri: &'a str,
+        path: Option<String>,
+        request_uri: Option<String>,
         http_status: u16,
-        error_message: &'a str,
+        error_message: Option<String>,
         // TODO: Replace with a list of error codes
         bytes_sent: u64,
         object_size: u64,
         total_time: Duration,
         processing_time: Duration,
-        referrer: &'a str,
-        user_agent: &'a str,
-        version_id: &'a str
+        referrer: Option<String>,
+        user_agent: Option<String>,
+        version_id: Option<String>
     }
 
-    impl<'a> Default for LogEntry<'a> {
-        fn default() -> LogEntry<'a> {
+    impl Default for LogEntry {
+        fn default() -> LogEntry {
             LogEntry {
-                owner_id: "-",
-                bucket: "-",
+                owner_id: None,
+                bucket: None,
                 timestamp: Local::now().with_timezone(&UTC),
                 ip_address: "127.0.0.1".parse().unwrap(),
-                requestor_id: "-",
-                request_id: "-",
+                requestor_id: None,
+                request_id: None,
                 operation: "UNKNOWN.UNKNOWN.UNKNOWN".parse().unwrap(),
-                path: "-",
-                request_uri: "-",
+                path: None,
+                request_uri: None,
                 http_status: 0,
-                error_message: "-",
+                error_message: None,
                 bytes_sent: 0,
                 object_size: 0,
                 total_time: Duration::new(0, 0),
                 processing_time: Duration::new(0, 0),
-                referrer: "-",
-                user_agent: "-",
-                version_id: "-"
+                referrer: None,
+                user_agent: None,
+                version_id: None
             }
         }
     }
@@ -64,40 +64,48 @@ pub mod log_entry {
         }
     }
 
-    impl<'a> LogEntry<'a> {
+    macro_rules! get_next_token {
+        ($a:ident) => (Some($a.next().unwrap().to_string()))
+    }
+
+    macro_rules! get_next_parsed_token {
+        ($a:ident) => ($a.next().unwrap().parse().unwrap())
+    }
+
+    impl LogEntry {
         pub fn was_complete_download(&self) -> bool {
             self.bytes_sent == self.object_size
         }
 
-        pub fn from_str(line: &'a str) -> LogEntry {
+        pub fn from_str<'a>(line: &'a str) -> LogEntry {
             let mut new_entry = LogEntry::default();
             let mut tokenizer = Tokenizer::new(SEPARATORS, line);
-            new_entry.owner_id = tokenizer.next().unwrap();
-            new_entry.bucket = tokenizer.next().unwrap();
+            new_entry.owner_id = get_next_token!(tokenizer);
+            new_entry.bucket = get_next_token!(tokenizer);
             tokenizer.next(); // Skip open '['
             new_entry.timestamp = DateTime::parse_from_str(tokenizer.next().unwrap(), "%d/%b/%Y:%H:%M:%S %z").unwrap().with_timezone(&UTC);
             tokenizer.next(); // Skip ending space
-            new_entry.ip_address = tokenizer.next().unwrap().parse().unwrap();
-            new_entry.requestor_id = tokenizer.next().unwrap();
-            new_entry.request_id = tokenizer.next().unwrap();
-            new_entry.operation = tokenizer.next().unwrap().parse().unwrap();
-            new_entry.path = tokenizer.next().unwrap();
+            new_entry.ip_address = get_next_parsed_token!(tokenizer);
+            new_entry.requestor_id = get_next_token!(tokenizer);
+            new_entry.request_id = get_next_token!(tokenizer);
+            new_entry.operation = get_next_parsed_token!(tokenizer);
+            new_entry.path = get_next_token!(tokenizer);
             tokenizer.next(); // Skip open '"'
-            new_entry.request_uri = tokenizer.next().unwrap();
+            new_entry.request_uri = get_next_token!(tokenizer);
             tokenizer.next(); // Skip ending space
-            new_entry.http_status = tokenizer.next().unwrap().parse().unwrap();
-            new_entry.error_message = tokenizer.next().unwrap();
+            new_entry.http_status = get_next_parsed_token!(tokenizer);
+            new_entry.error_message = get_next_token!(tokenizer);
             new_entry.bytes_sent = parse_int(tokenizer.next().unwrap());
             new_entry.object_size = parse_int(tokenizer.next().unwrap());
 
             new_entry.total_time = Duration::from_millis(parse_int(tokenizer.next().unwrap()));
             new_entry.processing_time = Duration::from_millis(parse_int(tokenizer.next().unwrap()));
             tokenizer.next(); // Skip open '"'
-            new_entry.referrer = tokenizer.next().unwrap();
+            new_entry.referrer = get_next_token!(tokenizer);
             tokenizer.next(); // Skip ending space
             tokenizer.next(); // Skip open '"'
-            new_entry.user_agent = tokenizer.next().unwrap();
-            new_entry.version_id = tokenizer.next().unwrap();
+            new_entry.user_agent = get_next_token!(tokenizer);
+            new_entry.version_id = get_next_token!(tokenizer);
 
             new_entry
         }
