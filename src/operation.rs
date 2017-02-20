@@ -1,8 +1,8 @@
 pub mod operation {
     use std::str::FromStr;
 
-    #[derive(Debug)]
-    enum OperationSource {
+    #[derive(Debug,PartialEq)]
+    pub enum OperationSource {
         UNKNOWN(String),
         SOAP,
         REST,
@@ -22,8 +22,8 @@ pub mod operation {
         }
     }
 
-    #[derive(Debug)]
-    enum OperationMethod {
+    #[derive(Debug,PartialEq)]
+    pub enum OperationMethod {
         UNKNOWN(String),
         GET,
         PUT,
@@ -41,8 +41,8 @@ pub mod operation {
         }
     }
 
-    #[derive(Debug)]
-    enum OperationResourceType {
+    #[derive(Debug,PartialEq)]
+    pub enum OperationResourceType {
         UNKNOWN(String),
         OBJECT
     }
@@ -58,9 +58,19 @@ pub mod operation {
 
     #[derive(Debug)]
     pub struct Operation {
-        source: OperationSource,
-        method: OperationMethod,
-        resource_type: OperationResourceType
+        pub source: OperationSource,
+        pub method: OperationMethod,
+        pub resource_type: OperationResourceType
+    }
+
+    impl Default for Operation {
+        fn default() -> Operation {
+            Operation {
+                source: OperationSource::BATCH,
+                method: OperationMethod::GET,
+                resource_type: OperationResourceType::OBJECT
+            }
+        }
     }
 
     impl FromStr for Operation {
