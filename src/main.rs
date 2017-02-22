@@ -15,8 +15,17 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::fs::File;
 use std::io::BufReader;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use chrono::{DateTime, UTC};
+
+type OutputMap = HashMap<u16, Vec<OutputEntry> >;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct JsonOutput {
+    data: OutputMap,
+    ids: HashSet<String>,
+    last_updated: DateTime<UTC>
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OutputEntry {
@@ -53,19 +62,26 @@ fn main() {
         panic!("{} isn't a directory", directory.to_str().unwrap());
     }
 
-    let mut results : HashMap<String, Vec<OutputEntry> > = HashMap::new();
+    let mut results : OutputMap = HashMap::new();
+    let mut ids : HashSet<String> = HashSet::new();
 
     let directory_entries = directory.read_dir().ok().unwrap();
     for file in directory_entries {
         let entry = file.ok().unwrap();
-        process_log_file(&entry.path(), &mut results);
+        process_log_file(&entry.path(), &mut results, &mut ids);
     }
 
-    let storage = serde_json::to_string_pretty(&results).unwrap();
+    let output = JsonOutput {
+        data: results,
+        ids: ids,
+        last_updated: UTC::now()
+    };
+
+    let storage = serde_json::to_string_pretty(&output).unwrap();
     println!("{}", storage);
 }
 
-fn process_log_file(path : &Path, results : &mut HashMap<String, Vec<OutputEntry> >) -> () {
+fn process_log_file(path : &Path, results : &mut OutputMap, ids : &mut HashSet<String>) -> () {
     let file = BufReader::new(File::open(&path).unwrap());
     let lines = file.lines().filter_map(|result| result.ok()); // Filter out bad rows
     let entries = lines.map(|x| LogEntry::from_str(&x))
@@ -74,17 +90,18 @@ fn process_log_file(path : &Path, results : &mut HashMap<String, Vec<OutputEntry
 
 
     for entry in entries {
-        let path = entry.path.clone().unwrap();
-        if !results.contains_key(&path) {
-            results.insert(path, Vec::new());
-        } else {
-            let mut x = results.get_mut(&path);
-            if x.is_some() {
-                x.as_mut().unwrap().push(OutputEntry::from(&entry));
+        let output_entry = OutputEntry::from(&entry);
+
+        if !ids.contains(entry.request_id.as_ref().unwrap()) {
+            if !results.contains_key(&output_entry.episode_number) {
+                results.insert(output_entry.episode_number, Vec::new());
+            } else {
+                let mut x = results.get_mut(&output_entry.episode_number);
+                ids.insert(entry.request_id.clone().unwrap());
+                if x.is_some() {
+                    x.as_mut().unwrap().push(output_entry);
+                }
             }
         }
     }
 }
-
-// Output Format:
-// UniqueID, DateTime, Episode, Was Complete Download
