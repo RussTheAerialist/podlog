@@ -1,6 +1,7 @@
 mod operation;
 mod tokenize;
 mod log_entry;
+mod output_entry;
 
 #[macro_use]
 extern crate serde_derive;
@@ -8,46 +9,16 @@ extern crate serde_json;
 extern crate chrono;
 extern crate clap;
 
-use log_entry::log_entry::LogEntry;
-use operation::operation::OperationSource;
+use log_entry::LogEntry;
+use operation::OperationSource;
+use output_entry::{JsonOutput, OutputEntry, OutputMap};
 use clap::{Arg, App};
 use std::io::prelude::*;
 use std::path::Path;
 use std::fs::File;
 use std::io::BufReader;
 use std::collections::{HashMap, HashSet};
-use chrono::{DateTime, UTC};
-
-type OutputMap = HashMap<u16, Vec<OutputEntry> >;
-
-#[derive(Debug, Serialize, Deserialize)]
-struct JsonOutput {
-    data: OutputMap,
-    ids: HashSet<String>,
-    last_updated: DateTime<UTC>
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct OutputEntry {
-    unique_id : String,
-    timestamp : DateTime<UTC>,
-    episode_number: u16,
-    complete_download: bool
-}
-
-impl OutputEntry {
-    fn from(e : &LogEntry) -> OutputEntry {
-        OutputEntry {
-            unique_id: match e.request_id {
-                Some(ref x) => x.clone(),
-                None => "".to_string()
-            },
-            timestamp: e.timestamp.clone(),
-            episode_number: 0,
-            complete_download: e.was_complete_download()
-        }
-    }
-}
+use chrono::UTC;
 
 fn main() {
     let matches = App::new("Podlog")
