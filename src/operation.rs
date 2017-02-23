@@ -7,7 +7,7 @@ pub enum OperationSource {
     SOAP,
     REST,
     WEBSITE,
-    BATCH
+    BATCH,
 }
 
 impl OperationSource {
@@ -17,7 +17,7 @@ impl OperationSource {
             "REST" => OperationSource::REST,
             "WEBSITE" => OperationSource::WEBSITE,
             "BATCH" => OperationSource::BATCH,
-            _ => OperationSource::UNKNOWN(data.to_string())
+            _ => OperationSource::UNKNOWN(data.to_string()),
         }
     }
 }
@@ -27,7 +27,7 @@ pub enum OperationMethod {
     UNKNOWN(String),
     GET,
     PUT,
-    DELETE
+    DELETE,
 }
 
 impl OperationMethod {
@@ -36,7 +36,7 @@ impl OperationMethod {
             "GET" => OperationMethod::GET,
             "PUT" => OperationMethod::PUT,
             "DELETE" => OperationMethod::DELETE,
-            _ => OperationMethod::UNKNOWN(data.to_string())
+            _ => OperationMethod::UNKNOWN(data.to_string()),
         }
     }
 }
@@ -44,14 +44,14 @@ impl OperationMethod {
 #[derive(Debug,PartialEq)]
 pub enum OperationResourceType {
     UNKNOWN(String),
-    OBJECT
+    OBJECT,
 }
 
 impl OperationResourceType {
     fn from_str(data: &str) -> OperationResourceType {
         match data {
             "OBJECT" => OperationResourceType::OBJECT,
-            _ => OperationResourceType::UNKNOWN(data.to_string())
+            _ => OperationResourceType::UNKNOWN(data.to_string()),
         }
     }
 }
@@ -60,7 +60,7 @@ impl OperationResourceType {
 pub struct Operation {
     pub source: OperationSource,
     pub method: OperationMethod,
-    pub resource_type: OperationResourceType
+    pub resource_type: OperationResourceType,
 }
 
 impl Default for Operation {
@@ -68,7 +68,7 @@ impl Default for Operation {
         Operation {
             source: OperationSource::BATCH,
             method: OperationMethod::GET,
-            resource_type: OperationResourceType::OBJECT
+            resource_type: OperationResourceType::OBJECT,
         }
     }
 }
@@ -88,14 +88,14 @@ impl FromStr for Operation {
         Ok(Operation {
             source: OperationSource::from_str(source.unwrap()),
             method: OperationMethod::from_str(method.unwrap()),
-            resource_type: OperationResourceType::from_str(resource_type.unwrap())
+            resource_type: OperationResourceType::from_str(resource_type.unwrap()),
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use operation::Operation;
+    use super::Operation;
     use std::str::FromStr;
 
     #[test]
@@ -110,4 +110,3 @@ mod tests {
         let _ = Operation::from_str("foo").unwrap();
     }
 }
-

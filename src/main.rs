@@ -22,19 +22,19 @@ use chrono::UTC;
 
 fn main() {
     let matches = App::new("Podlog")
-        .version("0.1")
-        .arg(Arg::with_name("DIRECTORY")
-            .required(true)
-            .index(1))
-        .get_matches();
+                      .version("0.1")
+                      .arg(Arg::with_name("DIRECTORY")
+                               .required(true)
+                               .index(1))
+                      .get_matches();
 
     let directory = Path::new(matches.value_of("DIRECTORY").unwrap());
     if !directory.is_dir() {
         panic!("{} isn't a directory", directory.to_str().unwrap());
     }
 
-    let mut results : OutputMap = HashMap::new();
-    let mut ids : HashSet<String> = HashSet::new();
+    let mut results: OutputMap = HashMap::new();
+    let mut ids: HashSet<String> = HashSet::new();
 
     let directory_entries = directory.read_dir().ok().unwrap();
     for file in directory_entries {
@@ -45,14 +45,14 @@ fn main() {
     let output = JsonOutput {
         data: results,
         ids: ids,
-        last_updated: UTC::now()
+        last_updated: UTC::now(),
     };
 
     let storage = serde_json::to_string_pretty(&output).unwrap();
     println!("{}", storage);
 }
 
-fn process_log_file(path : &Path, results : &mut OutputMap, ids : &mut HashSet<String>) -> () {
+fn process_log_file(path: &Path, results: &mut OutputMap, ids: &mut HashSet<String>) -> () {
     let file = BufReader::new(File::open(&path).unwrap());
     let lines = file.lines().filter_map(|result| result.ok()); // Filter out bad rows
     let entries = lines.map(|x| LogEntry::from_str(&x))
