@@ -83,16 +83,31 @@ impl FromStr for Operation {
         let method = parts.next().ok_or("Unable to find match");
         let resource_type = parts.next().ok_or("Unable to find resource type");
 
-        let all_ok = source.and(method).and(resource_type);
+        try!(source.and(method).and(resource_type));
 
-        match all_ok {
-            Ok(_) => Ok(Operation {
-                source: OperationSource::from_str(source.unwrap()),
-                method: OperationMethod::from_str(method.unwrap()),
-                resource_type: OperationResourceType::from_str(resource_type.unwrap())
-            }),
-            Err(x) => Err(x)
-        }
+        Ok(Operation {
+            source: OperationSource::from_str(source.unwrap()),
+            method: OperationMethod::from_str(method.unwrap()),
+            resource_type: OperationResourceType::from_str(resource_type.unwrap())
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use operation::Operation;
+    use std::str::FromStr;
+
+    #[test]
+    #[should_panic(expected = "Unable to find resource type")]
+    fn operation_gives_err_without_a_resource_type() {
+        let _ = Operation::from_str("foo.bar").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Unable to find match")]
+    fn operation_gives_err_without_a_match() {
+        let _ = Operation::from_str("foo").unwrap();
     }
 }
 
