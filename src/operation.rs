@@ -78,30 +78,21 @@ impl FromStr for Operation {
 
     fn from_str(data: &str) -> Result<Operation, &'static str> {
         let mut parts = data.split(".");
-        let source_option = parts.next();
-        let method_option = parts.next();
-        let resource_type_option = parts.next();
 
-        let source = match source_option {
-            Some(s) => s,
-            None => return Err("Unable to find source")
-        };
+        let source = parts.next().ok_or("Unable to find source");
+        let method = parts.next().ok_or("Unable to find match");
+        let resource_type = parts.next().ok_or("Unable to find resource type");
 
-        let method = match method_option {
-            Some(s) => s,
-            None => return Err("Unable to find match")
-        };
+        let all_ok = source.and(method).and(resource_type);
 
-        let resource_type = match resource_type_option {
-            Some(s) => s,
-            None => return Err("Unable to find resource type")
-        };
-
-        Ok(Operation {
-            source: OperationSource::from_str(source),
-            method: OperationMethod::from_str(method),
-            resource_type: OperationResourceType::from_str(resource_type)
-        })
+        match all_ok {
+            Ok(_) => Ok(Operation {
+                source: OperationSource::from_str(source.unwrap()),
+                method: OperationMethod::from_str(method.unwrap()),
+                resource_type: OperationResourceType::from_str(resource_type.unwrap())
+            }),
+            Err(x) => Err(x)
+        }
     }
 }
 
